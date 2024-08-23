@@ -5,6 +5,7 @@ import { pino } from "pino";
 
 import { env } from "./common/utils/envConfig";
 import errorHandler from "./middleware/errorHandler";
+import { tasksRouter } from "./api/tasks/tasksRouter";
 
 const logger = pino({ name: "server start" });
 const app: Express = express();
@@ -16,6 +17,9 @@ app.set("trust proxy", true);
 app.use(express.json());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(helmet());
+
+// Routes
+app.use("/tasks",tasksRouter)
 
 // Swagger UI
 //app.use(openAPIRouter);

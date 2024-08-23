@@ -12,15 +12,17 @@ export const taskService = {
     userId: string;
     pageIndex: number;
     pageSize: number;
+    label?: string;
   }): Promise<ServiceResponse<Task[] | null>> => {
     try {
-      const { pageIndex, pageSize, userId } = filters;
+      const { pageIndex, pageSize, userId, label } = filters;
       const offset = (pageIndex - 1) * pageSize;
 
       const { tasks, totalCount } = await tasksRepository.finAllAsync({
         limit: pageSize,
         offset,
         userId,
+        label,
       });
 
       if (tasks.length === 0)
@@ -57,38 +59,26 @@ export const taskService = {
       );
     }
   },
-
-  findTasksByLabel: async (
-    userId: string,
-    label: string
-  ): Promise<ServiceResponse<Task[] | null>> => {
+  findTaskById: async (id: string): Promise<ServiceResponse<Task | null>> => {
     try {
-      if (!userId)
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          "no user found",
-          null,
-          StatusCodes.BAD_REQUEST
-        );
-
-      const tasks = await tasksRepository.findTasksByLabelAsync(userId, label);
-      if (tasks.length === 0)
+      const task = await tasksRepository.findtaskByIdAsync(id);
+      if (!task)
         return new ServiceResponse(
           ResponseStatus.Success,
-          "no tasks found with this label",
+          "task not found",
           null,
           StatusCodes.NOT_FOUND
         );
       return new ServiceResponse(
         ResponseStatus.Success,
-        `tasks with ${label} label fetched successfully`,
-        tasks,
+        "task fetched successfully",
+        task,
         StatusCodes.OK
       );
     } catch (ex) {
       return new ServiceResponse(
         ResponseStatus.Failed,
-        `Error fetching tasks : ${(ex as Error).message}`,
+        `Error fetching task : ${(ex as Error).message}`,
         null,
         StatusCodes.INTERNAL_SERVER_ERROR
       );
@@ -106,13 +96,6 @@ export const taskService = {
           StatusCodes.BAD_REQUEST
         );
       const result = await tasksRepository.creatTask(task);
-      if (!result)
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          "something went wrong!",
-          null,
-          StatusCodes.BAD_REQUEST
-        );
       return new ServiceResponse(
         ResponseStatus.Success,
         "task created successfully",
@@ -131,7 +114,7 @@ export const taskService = {
 
   deleteTask: async (id: string): Promise<ServiceResponse<Task | null>> => {
     try {
-      const task = await tasksRepository.findtaskById(id);
+      const task = await tasksRepository.findtaskByIdAsync(id);
       if (!task)
         return new ServiceResponse(
           ResponseStatus.Success,
@@ -167,7 +150,7 @@ export const taskService = {
     id: string
   ): Promise<ServiceResponse<Task | null>> => {
     try {
-      const task = await tasksRepository.findtaskById(id);
+      const task = await tasksRepository.findtaskByIdAsync(id);
       if (!task)
         return new ServiceResponse(
           ResponseStatus.Success,

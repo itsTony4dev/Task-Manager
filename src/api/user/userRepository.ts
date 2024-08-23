@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import { db } from "../../db";
 import { user } from "../../db/schema";
-import { InsertUser, InsertUserSchema, SelectUserSchema, User } from "./userModel";
+import {
+  InsertUser,
+  InsertUserSchema,
+  SelectUserSchema,
+  User,
+} from "./userModel";
 
 export const userReposiroty = {
   findAllAsync: async (): Promise<User[]> => {
@@ -15,14 +20,6 @@ export const userReposiroty = {
   findUserByIdAsync: async (id: string): Promise<User | null> => {
     try {
       const result = await db.select().from(user).where(eq(user.id, id));
-      return result.length > 0 ? SelectUserSchema.parse(result[0]) : null;
-    } catch (ex) {
-      throw new Error("database ex");
-    }
-  },
-  findUserByEmailAsync: async (email: string): Promise<User | null> => {
-    try {
-      const result = await db.select().from(user).where(eq(user.email, email));
       return result.length > 0 ? SelectUserSchema.parse(result[0]) : null;
     } catch (ex) {
       throw new Error("database ex");
@@ -55,5 +52,9 @@ export const userReposiroty = {
     } catch (ex) {
       throw new Error("database ex");
     }
+  },
+  findUserByEmailAsync: async (email: string): Promise<User | null> => {
+    const foundUser = await db.select().from(user).where(eq(user.email, email));
+    return foundUser.length > 0 ? SelectUserSchema.parse(foundUser[0]) : null;
   },
 };

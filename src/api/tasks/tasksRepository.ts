@@ -8,16 +8,20 @@ export const tasksRepository = {
     limit: number;
     offset: number;
     userId: string;
+    label?: string;
   }): Promise<{ tasks: Task[]; totalCount: number }> => {
+    // Create a function to apply filters
+    const applyFilters = (query: any) => {
+      query = query.where(eq(tasks.userId, filters.userId));
+      if (filters.label) {
+        query = query.where(eq(tasks.label, filters.label));
+      }
+      return query;
+    };
+
     const [totalCountResult, result] = await Promise.all([
-      db
-        .select({ count: sql`count(*)` })
-        .from(tasks)
-        .where(eq(tasks.userId, filters.userId)),
-      db
-        .select()
-        .from(tasks)
-        .where(eq(tasks.userId, filters.userId))
+      applyFilters(db.select({ count: sql`count(*)` }).from(tasks)),
+      applyFilters(db.select().from(tasks))
         .limit(filters.limit)
         .offset(filters.offset)
         .execute(),
@@ -32,18 +36,7 @@ export const tasksRepository = {
       totalCount: Number(totalCountResult[0].count),
     };
   },
-  findTasksByLabelAsync: async (
-    userId: string,
-    label: string
-  ): Promise<Task[]> => {
-    const result = await db
-      .select()
-      .from(tasks)
-      .where(and(eq(tasks.userId, userId), eq(tasks.label, label)))
-      .execute();
-    return result.map((row: any) => SelectTaskSchema.parse(row));
-  },
-  findtaskById: async (id: string): Promise<Task | null> => {
+  findtaskByIdAsync: async (id: string): Promise<Task | null> => {
     const result = await db
       .select()
       .from(tasks)
