@@ -7,6 +7,7 @@ import { userReposiroty } from "./userRepository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { StatusCodes } from "http-status-codes";
 dotenv.config();
 
 export const userService = {
@@ -165,6 +166,51 @@ export const userService = {
         `error creating user :${(ex as Error).message}`,
         null,
         500
+      );
+    }
+  },
+
+  refreshtoken: async (
+    token: string
+  ): Promise<ServiceResponse<{ token: string } | null>> => {
+    try {
+      if (!token) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          "Refresh token is required",
+          null,
+          StatusCodes.BAD_REQUEST
+        );
+      }
+      const decode = jwt.verify(
+        token,
+        process.env.JWT_REFRESH_SECRET as string
+      ) as { id: string; email: string; name: string };
+      const user = await userReposiroty.findUserByIdAsync(decode.id);
+      if (!user)
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          "user not found",
+          null,
+          StatusCodes.NOT_FOUND
+        );
+      const accessToken = jwt.sign(
+        { id: user.id },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "1h" }
+      );
+      return new ServiceResponse(
+        ResponseStatus.Success,
+        "login successful",
+        { token: accessToken },
+        StatusCodes.OK
+      );
+    } catch (ex) {
+      return new ServiceResponse(
+        ResponseStatus.Failed,
+        `error creating user :${(ex as Error).message}`,
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR
       );
     }
   },
