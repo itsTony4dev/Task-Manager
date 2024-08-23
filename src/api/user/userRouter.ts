@@ -14,5 +14,10 @@ export const userRouter: Router = (() => {
     const ServiceResponse = await userService.signup(name, email, password);
     handleServiceResponse(ServiceResponse, res);
   });
+  router.post('/refresh-token', async (req: Request, res: Response) => {
+    const { refreshToken } = req.body ;
+    const serviceResponse = await userService.refreshToken(refreshToken);
+    handleServiceResponse(serviceResponse, res);
+  });
   return router;
 })();

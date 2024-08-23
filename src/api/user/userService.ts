@@ -170,7 +170,7 @@ export const userService = {
     }
   },
 
-  refreshtoken: async (
+  refreshToken: async (
     token: string
   ): Promise<ServiceResponse<{ token: string } | null>> => {
     try {
